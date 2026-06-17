@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para ti ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose:     #c8637a;
+      --blush:    #f2dde4;
+      --petal:    #faf0f3;
+      --ink:      #2b1a22;
+      --muted:    #8c6370;
+      --gold:     #c9a96e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--petal);
+      color: var(--ink);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── Petals falling ── */
+    #petals-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Music player ── */
+    #player {
+      position: fixed;
+      bottom: 1.4rem; right: 1.4rem;
+      z-index: 100;
+      background: white;
+      border-radius: 999px;
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      box-shadow: 0 4px 24px rgba(200,99,122,0.18);
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    #player:hover { box-shadow: 0 6px 32px rgba(200,99,122,0.28); }
+    #player-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--rose);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #player-icon svg { fill: white; }
+    #player-label { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    #player-label strong { display: block; color: var(--ink); font-weight: 400; font-size: 0.85rem; }
+    audio { display: none; }
+
+    /* ── Hero ── */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 2rem;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--rose);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.8rem, 9vw, 5.5rem);
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--ink);
+      margin-bottom: 1.4rem;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--rose);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+      color: var(--muted);
+      max-width: 420px;
+      line-height: 1.8;
+      margin-bottom: 2.8rem;
+    }
+
+    .scroll-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      animation: bounce 2.2s ease-in-out infinite;
+    }
+    .scroll-hint svg { width: 18px; opacity: 0.5; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* ── Sections ── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 5rem 1.6rem;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 1.6rem;
+    }
+    .section-title em { font-style: italic; color: var(--rose); }
+
+    .section-body {
+      font-size: 1rem;
+      line-height: 2;
+      color: var(--muted);
+      max-width: 560px;
+    }
+    .section-body p + p { margin-top: 1.2rem; }
+
+    /* ── Photo grid ── */
+    #memories {
+      padding: 5rem 1rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    #memories .section-label,
+    #memories .section-title { padding: 0 0.6rem; }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      margin-top: 2rem;
+    }
+    @media (min-width: 600px) {
+      .photo-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .photo-card {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      background: var(--blush);
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(44,26,34,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .photo-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 8px 28px rgba(200,99,122,0.18); }
+    .photo-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Placeholder when no image is set */
+    .photo-card.placeholder::after {
+      content: attr(data-caption);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--rose);
+      padding: 1rem;
+      text-align: center;
+      background: var(--blush);
+    }
+    .photo-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 0.8rem 0.8rem 0.7rem;
+      background: linear-gradient(transparent, rgba(43,26,34,0.5));
+      color: white;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .photo-card:hover .photo-caption { opacity: 1; }
+
+    /* ── Quote / poem block ── */
+    .poem-block {
+      background: white;
+      border-left: 3px solid var(--rose);
+      border-radius: 0 12px 12px 0;
+      padding: 2rem 2rem 2rem 2.4rem;
+      margin: 3rem 0;
+      box-shadow: 0 2px 18px rgba(200,99,122,0.07);
+    }
+    .poem-block p {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      line-height: 1.85;
+      color: var(--ink);
+    }
+    .poem-block cite {
+      display: block;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      color: var(--rose);
+      font-style: normal;
+      text-transform: uppercase;
+    }
+
+    /* ── Reasons list ── */
+    .reasons-list {
+      list-style: none;
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .reasons-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      font-size: 0.97rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+    .reason-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      line-height: 1;
+      color: var(--blush);
+      flex-shrink: 0;
+      width: 2rem;
+      text-align: right;
+      user-select: none;
+    }
+
+    /* ── Final love letter ── */
+    #letter {
+      text-align: center;
+      padding: 5rem 2rem 8rem;
+    }
+    #letter .section-title { margin-bottom: 2rem; }
+    #letter .letter-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.05rem, 3vw, 1.25rem);
+      font-style: italic;
+      line-height: 2.1;
+      color: var(--ink);
+      max-width: 560px;
+      margin: 0 auto 2.8rem;
+    }
+    .sign-off {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rose);
+    }
+
+    /* ── Heart pulse signature ── */
+    .heart-pulse {
+      display: flex;
+      justify-content: center;
+      margin-top: 3rem;
+    }
+    .heart-pulse svg {
+      width: 48px;
+      fill: var(--rose);
+      animation: heartbeat 1.4s ease-in-out infinite;
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14%       { transform: scale(1.18); }
+      28%       { transform: scale(1); }
+      42%       { transform: scale(1.12); }
+      70%       { transform: scale(1); }
+    }
+
+    /* ── Divider ── */
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: var(--rose);
+      margin: 2.5rem auto;
+      opacity: 0.35;
+    }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(43,26,34,0.88);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 100%;
+      max-height: 90svh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 1.2rem; right: 1.4rem;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+      background: none;
+      border: none;
+    }
+
+    /* ── Fade-in on scroll ── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s, transform 0.7s; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Falling petals -->
+<canvas id="petals-canvas"></canvas>
+
+<!-- Music player -->
+<div id="player" onclick="toggleMusic()" title="Reproducir / pausar">
+  <div id="player-icon">
+    <svg id="play-svg" viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+  </div>
+  <div id="player-label">
+    <strong id="song-title">nuestra canción</strong>
+    <!-- Pon el nombre real de la canción arriba -->
+    Toca para escuchar
+  </div>
+</div>
+
+<!--
+  ╔══════════════════════════════════════════════╗
+  ║  MÚSICA — pon la ruta de tu archivo de audio ║
+  ║  Ejemplo: src="musica/nuestra-cancion.mp3"   ║
+  ╚══════════════════════════════════════════════╝
+-->
+<audio id="bg-music" loop>
+  <source src="C:\prototipo\musica\flaco.mp3" type="audio/mpeg" />
+</audio>
+
+<!-- ══════════ HERO ══════════ -->
+<section id="hero">
+  <p class="hero-eyebrow">MI SOFI </p>
+
+
+  <h1 class="hero-title">
+    Para <em>el amor<br>de mi vida</em>
+  
+  </h1>
+
+  <p class="hero-subtitle">
+    Porque hay cosas que las palabras apenas alcanzan a decir,
+    pero igual las intento cada vez que pienso en ti.
+  </p>
+
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z" fill="currentColor"/></svg>
+    Baja y lee
+  </div>
+</section>
+
+<!-- ══════════ POEMA / CITA ══════════ -->
+<section class="reveal">
+  <p class="section-label">Palabras para ti</p>
+  <h2 class="section-title">Lo que siento<br>cuando estás cerca</h2>
+
+  <div class="section-body">
+  
+    <p>
+      Hay días en que no encuentro las palabras exactas, pero entonces apareces tú
+      y de repente todo tiene sentido. Eres la razón por la que me despierto con ganas
+      de que el día sea bueno.
+    </p>
+    <p>
+     Aún recuerdo la primera vez que nos miramos, pude confirmar que
+     tenia en frente al amor de mi vida.
+    </p>
+  </div>
+
+  <div class="poem-block">
+    <p>
+      "El amor es, simplemente, la denominación del deseo y la búsqueda del todo"
+    </p>
+    <cite>— Platón.</cite>
+  </div>
+</section>
+
+<!-- ══════════ GALERÍA DE FOTOS ══════════ -->
+<div id="memories" class="reveal">
+  <p class="section-label">Nuestros momentos</p>
+  <h2 class="section-title">Las fotos que<br><em>guardo con cuidado</em></h2>
+
+  <div class="photo-grid">
+   
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG-20260528-WA0048.jpg" alt="Foto 1" loading="lazy" />
+      <div class="photo-caption">Me encanta ser victima de tus impulsos amorosos</div>
+    </div>
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG_20260329_232513_445.jpg" alt="Foto 2" loading="lazy" />
+      <div class="photo-caption">La sonrisa que más me gusta</div>
+    </div>
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG_20260610_234543154_HDR.jpg" alt="Foto 3" loading="lazy" />
+      <div class="photo-caption">Ese momento que no olvidamos</div>
+    </div>
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG-20260417-WA0064.jpg" alt="Foto 4" loading="lazy" />
+      <div class="photo-caption">Juntos</div>
+    </div>
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG-20260417-WA0094.jpg" alt="Foto 5" loading="lazy" />
+      <div class="photo-caption">Mi favorita</div>
+    </div>
+
+    <div class="photo-card" onclick="openLightbox(this)">
+      <img src="C:\prototipo\img\IMG-20260410-WA0106.jpg" alt="Foto 6" loading="lazy" />
+      <div class="photo-caption">Quedate conmigo siempre</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ RAZONES ══════════ -->
+<section class="reveal">
+  <p class="section-label">Por qué te amo</p>
+  <h2 class="section-title">Razones que<br><em>no caben en una lista</em></h2>
+
+  <ul class="reasons-list">
+
+    <li>
+      <span class="reason-num">1</span>
+      <span>Por tu risa, que ilumina cualquier lugar donde estés.</span>
+    </li>
+    <li>
+      <span class="reason-num">2</span>
+      <span>Por cómo me escuchas aunque yo no sepa bien qué estoy diciendo.</span>
+    </li>
+    <li>
+      <span class="reason-num">3</span>
+      <span>Por tu manera de ver el mundo, que siempre me hace verlo diferente.</span>
+    </li>
+    <li>
+      <span class="reason-num">4</span>
+      <span>Por amarme sin miedo y no irte de mi lado.</span>
+    </li>
+    <li>
+      <span class="reason-num">5</span>
+      <span>Y por todo lo demás que todavía no sé cómo explicar.</span>
+    </li>
+  </ul>
+</section>
+
+
+<section id="letter" class="reveal">
+  <p class="section-label">Para siempre</p>
+  <h2 class="section-title">Lo que quiero<br><em>que sepas hoy</em></h2>
+
+  <div class="letter-body">
+ Mi linda Sofi, te agradezco infitamente que estés en mi vida porque<br>
+ con cada día que pasa, me voy enamorando de la persona tan hermosa que eres.<br>
+ Recuerda hoy y siempre que te amo como no tienes una idea mi amor, eres mi motor para seguir adelante.
+  </div>
+
+  <div class="divider"></div>
+
+  
+  <p class="sign-off">Con todo mi amor,<br><strong>Tú Yu.</strong></p>
+
+  <div class="heart-pulse">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+               2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+               C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5
+               c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="Foto ampliada" />
+</div>
+
+<script>
+/* ── Petals ── */
+(function () {
+  const canvas = document.getElementById('petals-canvas');
+  const ctx = canvas.getContext('2d');
+  const COLORS = ['#f2dde4', '#e8b4c0', '#c8637a33', '#faf0f3'];
+  let W, H, petals = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function Petal() {
+    this.reset(true);
+  }
+  Petal.prototype.reset = function (init) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H : -20;
+    this.r = 4 + Math.random() * 7;
+    this.vx = -0.5 + Math.random() * 1;
+    this.vy = 0.6 + Math.random() * 1.2;
+    this.angle = Math.random() * Math.PI * 2;
+    this.spin = (-0.015 + Math.random() * 0.03);
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.alpha = 0.5 + Math.random() * 0.5;
+  };
+  Petal.prototype.update = function () {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.angle += this.spin;
+    if (this.y > H + 20) this.reset(false);
+  };
+  Petal.prototype.draw = function () {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.r, this.r * 0.55, 0, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.restore();
+  };
+
+  for (let i = 0; i < 38; i++) petals.push(new Petal());
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    petals.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ── Music ── */
+const audio = document.getElementById('bg-music');
+const playSvg = document.getElementById('play-svg');
+let playing = false;
+
+function toggleMusic() {
+  if (playing) {
+    audio.pause();
+    playSvg.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  } else {
+    audio.play().catch(() => {});
+    playSvg.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+  }
+  playing = !playing;
+}
+
+/* ── Lightbox ── */
+function openLightbox(card) {
+  const img = card.querySelector('img');
+  if (!img) return;
+  document.getElementById('lightbox-img').src = img.src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+/* ── Scroll reveal ── */
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+revealEls.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
